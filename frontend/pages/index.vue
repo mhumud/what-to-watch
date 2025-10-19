@@ -49,22 +49,80 @@
       </div>
     </div>
 
-    <div v-if="recentRatings.length > 0" style="margin-top: 3rem;">
-      <h2 style="margin-bottom: 1.5rem;">Recently Rated</h2>
+    <div v-if="allRatings.length > 0" style="margin-top: 3rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>Your Rated Movies & Shows</h2>
+        <div style="color: var(--text-secondary);">
+          {{ allRatings.length }} total • Page {{ currentPage }} of {{ totalPages }}
+        </div>
+      </div>
+      
       <div class="grid">
         <MovieCard
-          v-for="rating in recentRatings"
+          v-for="rating in paginatedRatings"
           :key="rating.imdb_id"
           :movie="rating"
           @click="viewDetails(rating.imdb_id)"
         />
+      </div>
+      
+      <!-- Pagination Controls -->
+      <div v-if="totalPages > 1" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem;">
+        <button 
+          @click="goToPage(1)" 
+          :disabled="currentPage === 1"
+          class="btn btn-secondary btn-small"
+          :style="currentPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+        >
+          ⟪ First
+        </button>
+        
+        <button 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 1"
+          class="btn btn-secondary btn-small"
+          :style="currentPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+        >
+          ‹ Prev
+        </button>
+        
+        <div style="display: flex; gap: 0.5rem;">
+          <button
+            v-for="page in visiblePages"
+            :key="page"
+            @click="goToPage(page)"
+            class="btn btn-small"
+            :class="page === currentPage ? 'btn-primary' : 'btn-secondary'"
+            style="min-width: 2.5rem;"
+          >
+            {{ page }}
+          </button>
+        </div>
+        
+        <button 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage === totalPages"
+          class="btn btn-secondary btn-small"
+          :style="currentPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+        >
+          Next ›
+        </button>
+        
+        <button 
+          @click="goToPage(totalPages)" 
+          :disabled="currentPage === totalPages"
+          class="btn btn-secondary btn-small"
+          :style="currentPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+        >
+          Last ⟫
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
@@ -76,11 +134,41 @@ const stats = ref({
   activePlatforms: 0,
   avgRating: '0.0'
 })
-const recentRatings = ref([])
+const allRatings = ref([])
+const currentPage = ref(1)
+const itemsPerPage = 12
+
+// Computed properties for pagination
+const totalPages = computed(() => {
+  return Math.ceil(allRatings.value.length / itemsPerPage)
+})
+
+const paginatedRatings = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return allRatings.value.slice(start, end)
+})
+
+const visiblePages = computed(() => {
+  const pages = []
+  const maxVisible = 5
+  let startPage = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
+  let endPage = Math.min(totalPages.value, startPage + maxVisible - 1)
+  
+  if (endPage - startPage + 1 < maxVisible) {
+    startPage = Math.max(1, endPage - maxVisible + 1)
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i)
+  }
+  
+  return pages
+})
 
 onMounted(async () => {
   await fetchStats()
-  await fetchRecentRatings()
+  await fetchAllRatings()
   loading.value = false
 })
 
@@ -112,13 +200,24 @@ async function fetchStats() {
   }
 }
 
-async function fetchRecentRatings() {
+async function fetchAllRatings() {
   try {
     const response = await fetch(`${apiBase}/api/ratings`)
     const ratings = await response.json()
-    recentRatings.value = ratings.slice(-6).reverse()
+    // Sort by most recently added (newest first)
+    allRatings.value = ratings.sort((a, b) => {
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
   } catch (error) {
-    console.error('Failed to fetch recent ratings:', error)
+    console.error('Failed to fetch ratings:', error)
+  }
+}
+
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    // Scroll to top of ratings section
+    window.scrollTo({ top: 400, behavior: 'smooth' })
   }
 }
 
