@@ -222,7 +222,13 @@ def get_recommendations(
     watched_ids = {r.imdb_id for r in user_ratings if r.watched}
     rated_ids = {r.imdb_id for r in user_ratings}
     
-    for imdb_id in popular_ids:
+    # Also include rated but unwatched items as potential recommendations
+    all_candidate_ids = set(popular_ids)
+    for rating in user_ratings:
+        if not rating.watched:
+            all_candidate_ids.add(rating.imdb_id)
+    
+    for imdb_id in all_candidate_ids:
         # Skip if already watched
         if imdb_id in watched_ids:
             continue

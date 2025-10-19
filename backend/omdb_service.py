@@ -90,6 +90,27 @@ class OMDBService:
             "tt0080684",   # Star Wars: Episode V
             "tt0099685",   # Goodfellas
             "tt0073486",   # One Flew Over the Cuckoo's Nest
+            # Popular TV Shows
+            "tt0903747",   # Breaking Bad
+            "tt0944947",   # Game of Thrones
+            "tt1475582",   # Sherlock
+            "tt2861424",   # Rick and Morty
+            "tt0386676",   # The Office (US)
+            "tt0108778",   # Friends
+            "tt2467372",   # Brooklyn Nine-Nine
+            "tt5491994",   # Planet Earth II
+            "tt0306414",   # The Wire
+            "tt2395695",   # Stranger Things
+            "tt0141842",   # The Sopranos
+            "tt7366338",   # Chernobyl
+            "tt1856010",   # House of Cards
+            "tt0773262",   # Dexter
+            "tt4574334",   # Stranger Things
+            "tt0460649",   # How I Met Your Mother
+            "tt11280740",  # The Bear
+            "tt1190634",   # The Boys
+            "tt0367279",   # Arrested Development
+            "tt2575988",   # Silicon Valley
         ]
         return popular_ids
 
